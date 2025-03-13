@@ -1,0 +1,299 @@
+﻿services:
+  
+  init-volumes:
+    image: alpine:latest
+    command: sh -c "mkdir -p /var/log/nginx /var/log/traefik"
+    volumes:
+      - logs:/var/log/
+    
+#  proxyloadingtesting:
+#    image: proxyloadingtesting
+#    build:
+#      context: .
+#      dockerfile: ProxyLoadingTesting/Dockerfile
+#    depends_on:
+#      - webapi01
+#      - webapi02
+   
+  webapi01:
+    image: webapi01
+    depends_on:
+      - prometheus
+      - jaeger
+      - loki
+    ports:
+      - "5001:8080"
+      - "5003:8081"
+    build:
+      context: .
+      dockerfile: webapi01/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:80;http://+:8080;https://+:443;https://+:8081
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=123
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
+    volumes:
+      - ./Certificates:/https:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.webapi01.rule=PathPrefix(`/api/webapi01`)"
+      - "traefik.http.routers.webapi01.entrypoints=web"
+      - "traefik.http.services.webapi01.loadbalancer.server.port=8080"
+      - "traefik.http.middlewares.custom-source-header.headers.customrequestheaders.X-Request-Source=Traefik"
+      - "traefik.http.middlewares.webapi01-prefix.stripprefix.prefixes=/api/webapi01"
+      - "traefik.http.routers.webapi01.middlewares=webapi01-prefix,custom-source-header" #api-rate-limit
+  #      - "traefik.http.middlewares.webapi01-rate-limit.ratelimit.average=5"
+  #      - "traefik.http.middlewares.webapi01-rate-limit.ratelimit.burst=2"
+  
+  webapi01-i1:
+    image: webapi01
+    depends_on:
+      - prometheus
+      - jaeger
+      - loki
+    ports:
+      - "5001:8080"
+      - "5003:8081"
+    build:
+      context: .
+      dockerfile: webapi01/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:80;http://+:8080;https://+:443;https://+:8081
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=123
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
+    volumes:
+      - ./Certificates:/https:ro  
+  
+  webapi01-i2:
+    image: webapi01
+    depends_on:
+      - prometheus
+      - jaeger
+      - loki
+    ports:
+      - "5001:8080"
+      - "5003:8081"
+    build:
+      context: .
+      dockerfile: webapi01/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:80;http://+:8080;https://+:443;https://+:8081
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=123
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
+    volumes:
+      - ./Certificates:/https:ro
+
+  webapi02:
+    image: webapi02
+    depends_on:
+      - prometheus
+      - jaeger
+      - loki
+    ports:
+      - "5002:8080"
+      - "5004:8081"
+    build:
+      context: .
+      dockerfile: webapi02/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:80;http://+:8080;https://+:443;https://+:8081
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=123
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
+    volumes:
+      - ./Certificates:/https:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.webapi02.rule=PathPrefix(`/api/webapi02`)"
+      - "traefik.http.routers.webapi02.entrypoints=web"
+      - "traefik.http.services.webapi02.loadbalancer.server.port=8080"
+      - "traefik.http.middlewares.custom-source-header.headers.customrequestheaders.X-Request-Source=Traefik"
+      - "traefik.http.middlewares.webapi02-prefix.stripprefix.prefixes=/api/webapi02"
+      - "traefik.http.routers.webapi02.middlewares=webapi02-prefix,custom-source-header" #api-rate-limit
+#      - "traefik.http.middlewares.webapi02-rate-limit.ratelimit.average=5"
+#      - "traefik.http.middlewares.webapi02-rate-limit.ratelimit.burst=2"
+
+  yarpproxy:
+    image: yarpproxy
+    build:
+      context: .
+      dockerfile: YARPProxy/Dockerfile
+    ports:
+      - "9000:8080"
+      - "9001:8081"
+    depends_on:
+      - webapi01
+      - webapi02
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:80;http://+:8080;https://+:443;https://+:8081
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=123
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
+    volumes:
+      - ./Certificates:/https:ro
+
+  ocelotgateway:
+    image: ocelotgateway
+    build:
+      context: .
+      dockerfile: OcelotGateway/Dockerfile
+    ports:
+      - "8000:8080"
+      - "8001:8081"
+    depends_on:
+      - webapi01
+      - webapi02
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:80;http://+:8080;https://+:443;https://+:8081
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=123
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
+    volumes:
+      - ./Certificates:/https:ro
+
+  nginx:
+    image: nginx:latest
+    volumes:
+        - ./nginx.conf:/etc/nginx/nginx.conf:ro
+        - ./certs/gateway.crt:/etc/certificates/gateway.crt:ro
+        - ./certs/pokeapi-cert.crt:/etc/certificates/pokeapi-cert.crt:ro
+        - type: volume
+          source: logs
+          target: /var/log/nginx
+          bind:
+            create_host_path: true
+          volume:
+            nocopy: true
+            subpath: nginx
+          read_only: false
+    ports:
+      - "7000:80"
+      - "7001:8081"
+    depends_on:
+      - init-volumes
+      - webapi01
+      - webapi02
+      
+
+  traefik:
+    image: traefik:latest
+    ports:
+      - "6000:80"
+      - "6001:8080"
+    depends_on:
+      - init-volumes
+      - webapi01
+      - webapi02      
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false" # Expose only containers with traefik.enable=true
+      - "--entrypoints.web.address=:80"
+      - "--log.level=DEBUG"
+      - "--log.filePath=/var/log/traefik/traefik.log"
+      - "--log.format=json"
+      - "--accesslog=true"
+      - "--accesslog.filepath=/var/log/traefik/access.log"
+      - "--accesslog.format=json"
+      - "--accesslog.fields.names.service_name=Traefik"
+      - "--metrics.prometheus=true"
+      - "--metrics.prometheus.addEntryPointsLabels=true"
+      - "--metrics.prometheus.addrouterslabels=true"
+      - "--metrics.prometheus.addServicesLabels=true"
+      - "--tracing=true"
+      - "--tracing.serviceName=Traefik"
+      - "--tracing.otlp.grpc=true"
+      - "--tracing.otlp.grpc.insecure=true"
+      - "--tracing.otlp.grpc.endpoint=jaeger:4317"
+      - "--tracing.otlp.http.headers.service_name=Traefik"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - ./certs/:/etc/certificates/:ro 
+      - type: volume
+        source: logs
+        target: /var/log/traefik
+        bind:
+          create_host_path: true
+        volume:
+          nocopy: true
+          subpath: traefik
+        read_only: false
+    
+  
+  #Logging
+  loki:
+    image: grafana/loki:latest
+    ports:
+      - "3100:3100"
+    #command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      #- ./loki-config.yaml:/etc/loki/local-config.yaml
+      - loki-data:/loki
+  
+  promtail:
+    image: grafana/promtail:latest
+    ports:
+      - "9080:9080"
+    volumes:
+      - ./promtail-config.yaml:/etc/promtail/config.yml
+      - logs:/var/log
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    
+  #Tracing  
+  jaeger:
+    image: jaegertracing/jaeger:2.3.0
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+      - "16686:16686"
+      - "14268:14268"
+      - "14250:14250"
+      - "14269:14269"
+    environment:
+      - METRICS_STORAGE_TYPE=prometheus
+      - PROMETHEUS_SERVER_URL=http://prometheus:9090  
+
+  #Metrics
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus-config.yml:/etc/prometheus/prometheus-config.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus-config.yml"
+  
+  nginx-prometheus-exporter:
+    image: nginx/nginx-prometheus-exporter:latest
+    ports:
+      - "9113:9113"
+    command:
+      - "--nginx.scrape-uri=http://nginx/metrics"
+    depends_on:
+      - nginx
+
+  #Monitoring
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-data:/var/lib/grafana     
+      - ./grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+    
+    depends_on:
+      - prometheus
+      - loki  
+        
+volumes:
+  grafana-data:
+  loki-data:
+  prometheus-data:
+  logs:

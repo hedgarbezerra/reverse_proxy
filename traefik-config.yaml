@@ -1,0 +1,74 @@
+entryPoints:
+  web:
+    address: ":80"
+
+log:
+  level: DEBUG
+  filePath: "/var/log/traefik/traefik.log"
+  format: json
+
+accessLog:
+  filePath: "/var/log/traefik/access.log"
+  format: json
+  fields:
+    names:
+      service_name: Traefik
+
+metrics:
+  prometheus:
+    addEntryPointsLabels: true
+    addRoutersLabels: true
+    addServicesLabels: true
+
+tracing:
+  serviceName: Traefik
+  otlp:
+    grpc:
+      endpoint: "jaeger:4317"
+      insecure: true
+    http:
+      headers:
+        service_name: Traefik
+
+http:
+  routers:
+    webapi01:
+      rule: "PathPrefix(`/api/webapi01`)"
+      entryPoints:
+        - web
+      service: webapi01
+      middlewares:
+        - webapi01-prefix
+        - custom-source-header
+    webapi02:
+      rule: "PathPrefix(`/api/webapi02`)"
+      entryPoints:
+        - web
+      service: webapi02
+      middlewares:
+        - webapi02-prefix
+        - custom-source-header
+
+  services:
+    webapi01:
+      loadBalancer:
+        servers:
+          - url: "http://webapi01:8080"
+    webapi02:
+      loadBalancer:
+        servers:
+          - url: "http://webapi02:8080"
+
+  middlewares:
+    custom-source-header:
+      headers:
+        customRequestHeaders:
+          X-Request-Source: Traefik
+    webapi01-prefix:
+      stripPrefix:
+        prefixes:
+          - "/api/webapi01"
+    webapi02-prefix:
+      stripPrefix:
+        prefixes:
+          - "/api/webapi02"

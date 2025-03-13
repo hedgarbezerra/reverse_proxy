@@ -1,0 +1,21 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+
+  - job_name: 'ocelot-gateway'
+    static_configs:
+      - targets: [ 'ocelotgateway:8080' ] #nome do serviço e porta
+
+  - job_name: 'yarp-proxy'
+    static_configs:
+      - targets: [ 'yarpproxy:8080' ] #nome do serviço e porta
+        
+  - job_name: 'nginx'
+    static_configs:
+        - targets: [ 'nginx-prometheus-exporter:9113' ] #nome do serviço e porta
+
+  - job_name: 'traefik'
+    static_configs:
+      - targets: ['traefik:8080']
