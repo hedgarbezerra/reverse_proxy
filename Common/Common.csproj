@@ -7,12 +7,19 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Reference Include="Microsoft.AspNetCore"/>
-      <Reference Include="Microsoft.AspNetCore.Http.Abstractions"/>
+      <Compile Remove="Services\**" />
+      <EmbeddedResource Remove="Services\**" />
+      <None Remove="Services\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="Microsoft.AspNetCore" />
+      <Reference Include="Microsoft.AspNetCore.Http.Abstractions" />
       <Reference Include="Microsoft.AspNetCore.Http.Features" />
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.14" />
       <PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="5.0.17" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.1" />
       <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.11.2" />
@@ -29,10 +36,7 @@
       <PackageReference Include="Serilog.Enrichers.Process" Version="3.0.0" />
       <PackageReference Include="Serilog.Exceptions" Version="8.4.0" />
       <PackageReference Include="Serilog.Sinks.Grafana.Loki" Version="8.3.0" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Services\" />
+	  <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.7.0" />
     </ItemGroup>
 
 </Project>

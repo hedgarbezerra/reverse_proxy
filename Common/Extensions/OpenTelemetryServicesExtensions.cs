@@ -43,24 +43,24 @@ public static class OpenTelemetryExtensions
     {
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Information()
-            .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Debug)
+            .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Information)
             .Enrich.FromLogContext()
             .Enrich.WithExceptionDetails()
             .Enrich.WithEnvironmentName()
             .Enrich.WithMachineName()
-            .WriteTo.Console()
+            .WriteTo.Console(theme: Serilog.Sinks.SystemConsole.Themes.AnsiConsoleTheme.Code)
             .WriteTo.Debug()
-            .WriteTo.GrafanaLoki("http://loki:3100", 
+            .WriteTo.GrafanaLoki("http://loki:3100",
                 useInternalTimestamp: true,
-                restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Debug,
-                labels: [ NewLabel("service_name", serviceName)])
+                restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Information,
+                labels: [NewLabel("service_name", serviceName)])
             .CreateLogger();
 
         builder.Services.AddSerilog();
         builder.Host.UseSerilog();
 
         return builder;
-        
+
         LokiLabel NewLabel(string key, string value) => new LokiLabel { Key = key, Value = value };
     }
     
