@@ -16,25 +16,27 @@ namespace Common.Extensions
     {
         public static IServiceCollection AddSecurityServices(this IServiceCollection services)
         {
-            //services.AddSingleton<IAuthorizationPolicyProvider, DefaultAuthorizationPolicy>();
-
             services.AddAuthentication(Constants.Jwt.Scheme)
             .AddJwtBearer(Constants.Jwt.Scheme, jwtOptions =>
             {
+                jwtOptions.RequireHttpsMetadata = false;
+                jwtOptions.SaveToken = true;
+                jwtOptions.IncludeErrorDetails = true;
                 jwtOptions.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
                     ValidIssuer = Constants.Jwt.Issuer,
                     ValidateAudience = false,
                     ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Constants.Jwt.ApiKey),
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.Zero
                 };
-                jwtOptions.SaveToken = true;
-                jwtOptions.MapInboundClaims = false;
             });
 
             services.AddAuthorization(options =>
             {
-                options.AddPolicy(DefaultAuthorizationPolicy.Name, 
+                options.AddPolicy(DefaultAuthorizationPolicy.Name,
                     policy => policy.AddAuthenticationSchemes(Constants.Jwt.Scheme)
                                     .RequireClaim(ClaimTypes.System, Constants.Jwt.Claims.System)
                                     .RequireAuthenticatedUser());

@@ -25,14 +25,6 @@ services:
       - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
     volumes:
       - ./Certificates:/https:ro
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.webapi01.rule=PathPrefix(`/api/webapi01`)"
-      - "traefik.http.routers.webapi01.entrypoints=web"
-      - "traefik.http.services.webapi01.loadbalancer.server.port=8080"
-      - "traefik.http.middlewares.custom-source-header.headers.customrequestheaders.X-Request-Source=Traefik"
-      - "traefik.http.middlewares.webapi01-prefix.stripprefix.prefixes=/api/webapi01"
-      - "traefik.http.routers.webapi01.middlewares=webapi01-prefix,custom-source-header"
   
   webapi01-i1:
     image: webapi01
@@ -73,14 +65,6 @@ services:
       - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
     volumes:
       - ./Certificates:/https:ro
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.webapi02.rule=PathPrefix(`/api/webapi02`)"
-      - "traefik.http.routers.webapi02.entrypoints=web"
-      - "traefik.http.services.webapi02.loadbalancer.server.port=8080"
-      - "traefik.http.middlewares.custom-source-header.headers.customrequestheaders.X-Request-Source=Traefik"
-      - "traefik.http.middlewares.webapi02-prefix.stripprefix.prefixes=/api/webapi02"
-      - "traefik.http.routers.webapi02.middlewares=webapi02-prefix,custom-source-header"
 
   yarpproxy:
     image: yarpproxy
@@ -153,31 +137,10 @@ services:
       - init-volumes
       - webapi01
       - webapi02      
-    command:
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false" # Expose only containers with traefik.enable=true
-      - "--entrypoints.web.address=:80"
-      - "--log.level=DEBUG"
-      - "--log.filePath=/var/log/traefik/traefik.log"
-      - "--log.format=json"
-      - "--accesslog=true"
-      - "--accesslog.filepath=/var/log/traefik/access.log"
-      - "--accesslog.format=json"
-      - "--accesslog.fields.names.service_name=Traefik"
-      - "--metrics.prometheus=true"
-      - "--metrics.prometheus.addEntryPointsLabels=true"
-      - "--metrics.prometheus.addrouterslabels=true"
-      - "--metrics.prometheus.addServicesLabels=true"
-      - "--tracing=true"
-      - "--tracing.serviceName=Traefik"
-      - "--tracing.otlp.grpc=true"
-      - "--tracing.otlp.grpc.insecure=true"
-      - "--tracing.otlp.grpc.endpoint=jaeger:4317"
-      - "--tracing.otlp.http.headers.service_name=Traefik"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - ./certs/:/etc/certificates/:ro 
+      - ./traefik-config.yml:/etc/traefik/traefik.yml:ro
       - type: volume
         source: logs
         target: /var/log/traefik

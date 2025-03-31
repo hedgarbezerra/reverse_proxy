@@ -1,0 +1,93 @@
+entryPoints:
+  web:
+    address: ":80"
+
+# providers:
+#   docker:
+#     endpoint: "unix:///var/run/docker.sock"
+#     exposedByDefault: false
+
+providers:
+  file:
+    filename: "/etc/traefik/traefik.yml"
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+
+api:
+  insecure: true
+
+log:
+  level: DEBUG
+  filePath: "/var/log/traefik/traefik.log"
+  format: json
+
+accessLog:
+  filePath: "/var/log/traefik/access.log"
+  format: json
+  fields:
+    names:
+      service_name: Traefik
+
+metrics:
+  prometheus:
+    entryPoint: web
+    addEntryPointsLabels: true
+    addRoutersLabels: true
+    addServicesLabels: true
+
+tracing:
+  serviceName: Traefik
+  otlp:
+    grpc:
+      endpoint: jaeger:4317
+      insecure: true
+      headers:
+        service_name: Traefik
+
+http:
+  routers:
+    webapi01:
+      rule: "PathPrefix(`/api/webapi01`)"
+      service: webapi01
+      entryPoints:
+        - web
+      middlewares:
+        - webapi01-prefix
+        - custom-source-header
+
+    webapi02:
+      rule: "PathPrefix(`/api/webapi02`)"
+      service: webapi02
+      entryPoints:
+        - web
+      middlewares:
+        - webapi02-prefix
+        - custom-source-header
+
+  services:
+    webapi01:
+      loadBalancer:
+        servers:
+          - url: "http://webapi01:8080"
+
+    webapi02:
+      loadBalancer:
+        servers:
+          - url: "http://webapi02:8080"
+
+  middlewares:
+    custom-source-header:
+      headers:
+        customRequestHeaders:
+          X-Request-Source: Traefik
+
+    webapi01-prefix:
+      stripPrefix:
+        prefixes:
+          - "/api/webapi01"
+
+    webapi02-prefix:
+      stripPrefix:
+        prefixes:
+          - "/api/webapi02"

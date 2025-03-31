@@ -28,16 +28,6 @@ public static class OpenTelemetryExtensions
         var requestData = new RequestData(jsonHeaders, body);
         return requestData;
     }
-    
-    public static Action<RequestLoggingOptions> EnrichDiagnosticContext = options =>
-    {
-        options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
-        {
-            var requestData = GetData(httpContext).Result;
-            diagnosticContext.Set("Request-Headers", requestData.Headers);
-            diagnosticContext.Set("Request-Body", requestData.Body);
-        };
-    };
 
     public static WebApplicationBuilder UseSerilog(this WebApplicationBuilder builder, string serviceName)
     {
@@ -75,7 +65,7 @@ public static class OpenTelemetryExtensions
                 tb.AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
                     .AddConsoleExporter()
-                    .AddOtlpExporter(o => { o.Endpoint = new Uri(builder.Configuration["Otlp:Endpoint"]); });
+                    .AddOtlpExporter(o => { o.Endpoint = new Uri(builder.Configuration["Otlp:Endpoint"]?? string.Empty); });
             })
             .WithMetrics(mb =>
             {
