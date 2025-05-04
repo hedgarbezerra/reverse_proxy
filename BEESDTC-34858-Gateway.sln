@@ -12,6 +12,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		promtail-config.yaml = promtail-config.yaml
 		traefik-config.yml = traefik-config.yml
 		compose-yarp.yaml = compose-yarp.yaml
+		Directory.Packages.props = Directory.Packages.props
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YARPProxy", "YARPProxy\YARPProxy.csproj", "{30BA53BF-AAD3-4C22-B1F9-4545B8A88A78}"

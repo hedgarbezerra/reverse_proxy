@@ -1,9 +1,7 @@
 using Common.Extensions;
 using Common.Middlewares;
 using Common.Policies;
-using Microsoft.OpenApi.Models;
 using Serilog;
-using Yarp.ReverseProxy;
 using YARPProxy.Configurations;
 using YARPProxy.Services;
 
@@ -24,10 +22,7 @@ builder.Services
     .AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    options.OperationFilter<SwaggerConfiguration>();
-});
+builder.Services.AddSwaggerGen();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(CorsDefaultPolicy.Name, CorsDefaultPolicy.CorsPolicy);
@@ -59,10 +54,10 @@ app.UseSwagger();
 app.UseSwaggerUI(options =>
 {
     var swaggerManagers = app.Services.GetRequiredService<ISwaggerEndpointManager>();
-    
+
     foreach (var route in swaggerManagers.AvailableEndpointsVersions)
     {
-        foreach (var version in route.Versions)
+        foreach (var version in route.AvailableVersions.Select(x => x.Version))
         {
             options.SwaggerEndpoint(
                 $"{route.Address}/swagger/{version}/swagger.json", $"{route.Name} - {version}");

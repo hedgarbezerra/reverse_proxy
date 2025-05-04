@@ -2,12 +2,13 @@ using Yarp.ReverseProxy;
 
 namespace YARPProxy.Services;
 
-public record SwaggerVersionsEndpoint(string Name, string Address, List<string> Versions);
+public record SwaggerVersionsEndpointWithContent(string Name, string Address, List<EndpointVersion> AvailableVersions);
+public record EndpointVersion(string Version, string Content);
 
 public interface ISwaggerEndpointManager
 {
-    Task<List<SwaggerVersionsEndpoint>> DiscoverSwaggerVersionsAsync();
-    List<SwaggerVersionsEndpoint> AvailableEndpointsVersions { get; }
+    Task<List<SwaggerVersionsEndpointWithContent>> DiscoverSwaggerVersionsAsync();
+    List<SwaggerVersionsEndpointWithContent> AvailableEndpointsVersions { get; }
 }
 
 public class SwaggerEndpointManager : ISwaggerEndpointManager
@@ -16,7 +17,7 @@ public class SwaggerEndpointManager : ISwaggerEndpointManager
     private readonly IProxyStateLookup _proxyStateLookup;
     private readonly ILogger<SwaggerEndpointManager> _logger;
 
-    public List<SwaggerVersionsEndpoint> AvailableEndpointsVersions { get; }
+    public List<SwaggerVersionsEndpointWithContent> AvailableEndpointsVersions { get; }
 
     public SwaggerEndpointManager(IHttpClientFactory httpClientFactory, IProxyStateLookup proxyStateLookup, ILogger<SwaggerEndpointManager> logger)
     {
@@ -27,15 +28,16 @@ public class SwaggerEndpointManager : ISwaggerEndpointManager
         AvailableEndpointsVersions = DiscoverSwaggerVersionsAsync().Result;
     }
 
-    public async Task<List<SwaggerVersionsEndpoint>> DiscoverSwaggerVersionsAsync()
+    //TODO: Melhorar uso dessas chamas e salvar o conteúdo do resultado(Json)
+    public async Task<List<SwaggerVersionsEndpointWithContent>> DiscoverSwaggerVersionsAsync()
     {
-        var results = new List<SwaggerVersionsEndpoint>();
+        var results = new List<SwaggerVersionsEndpointWithContent>();
 
         foreach (var route in _proxyStateLookup.GetRoutes())
         {
             var (_, endpoint) = route.Cluster.Destinations.First();
             var baseAddress = endpoint.Model.Config.Address;
-            var versions = new List<string>();
+            var versions = new List<EndpointVersion>();
 
             try
             {
@@ -43,7 +45,7 @@ public class SwaggerEndpointManager : ISwaggerEndpointManager
 
                 if (versions.Any())
                 {
-                    results.Add(new SwaggerVersionsEndpoint(route.Config.RouteId, baseAddress, versions));
+                    results.Add(new SwaggerVersionsEndpointWithContent(route.Config.RouteId, baseAddress, versions));
                 }
             }
             catch (Exception ex)
@@ -54,7 +56,7 @@ public class SwaggerEndpointManager : ISwaggerEndpointManager
 
         return results;
     }
-    private async Task LoadRouteVersions(string baseAddress, List<string> versions)
+    private async Task LoadRouteVersions(string baseAddress, List<EndpointVersion> versions)
     {
         // Tenta descobrir as versões testando cada endpoint
         for (int majorVersion = 1; majorVersion <= 3; majorVersion++)
@@ -65,7 +67,7 @@ public class SwaggerEndpointManager : ISwaggerEndpointManager
                 var response = await _httpClientFactory.CreateClient().GetAsync(url);
                 if (response.IsSuccessStatusCode)
                 {
-                    versions.Add($"v{majorVersion}");
+                    versions.Add(new EndpointVersion($"v{majorVersion}", await response.Content.ReadAsStringAsync()));
                 }
                 if(response.StatusCode == System.Net.HttpStatusCode.NotFound)
                     break;

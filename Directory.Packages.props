@@ -1,0 +1,40 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.0" />
+    <PackageVersion Include="AspNetCoreRateLimit" Version="5.0.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.14" />
+    <PackageVersion Include="Microsoft.AspNetCore.Http.Features" Version="5.0.17" />
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="8.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.1" />
+    <PackageVersion Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
+    <PackageVersion Include="NBomber" Version="5.8.2" />
+    <PackageVersion Include="NBomber.Data" Version="5.0.0" />
+    <PackageVersion Include="NBomber.Http" Version="5.2.1" />
+    <PackageVersion Include="NBomber.Push" Version="3.0.0" />
+    <PackageVersion Include="Ocelot" Version="23.4.3" />
+    <PackageVersion Include="Ocelot.Cache.CacheManager" Version="23.4.3" />
+    <PackageVersion Include="Ocelot.Tracing.OpenTracing" Version="23.4.2" />
+    <PackageVersion Include="OpenTelemetry.Exporter.Console" Version="1.11.2" />
+    <PackageVersion Include="OpenTelemetry.Exporter.Jaeger" Version="1.5.1" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.11.2" />
+    <PackageVersion Include="OpenTelemetry.Exporter.Prometheus.AspNetCore" Version="1.11.2-beta.1" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.11.2" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.11.1" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.11.1" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Process" Version="1.11.0-beta.2" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.11.1" />
+    <PackageVersion Include="Serilog.AspNetCore" Version="8.0.3" />
+    <PackageVersion Include="Serilog.Enrichers.Environment" Version="3.0.1" />
+    <PackageVersion Include="Serilog.Enrichers.Process" Version="3.0.0" />
+    <PackageVersion Include="Serilog.Exceptions" Version="8.4.0" />
+    <PackageVersion Include="Serilog.Sinks.Console" Version="6.0.0" />
+    <PackageVersion Include="Serilog.Sinks.Grafana.Loki" Version="8.3.0" />
+    <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+    <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.7.0" />
+    <PackageVersion Include="Yarp.ReverseProxy" Version="2.3.0" />
+  </ItemGroup>
+</Project>
