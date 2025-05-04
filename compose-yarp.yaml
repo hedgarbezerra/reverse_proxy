@@ -1,0 +1,96 @@
+﻿services:
+
+  webapi01:
+    image: webapi01
+    ports:
+      - "5001:8080"
+      - "5002:8081"
+    build:
+      context: .
+      dockerfile: webapi01/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:80;http://+:8080;https://+:443;https://+:8081
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=123
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
+    volumes:
+      - ./Certificates:/https:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.webapi01.rule=PathPrefix(`/api/webapi01`)"
+      - "traefik.http.routers.webapi01.entrypoints=web"
+      - "traefik.http.services.webapi01.loadbalancer.server.port=8080"
+      - "traefik.http.middlewares.custom-source-header.headers.customrequestheaders.X-Request-Source=Traefik"
+      - "traefik.http.middlewares.webapi01-prefix.stripprefix.prefixes=/api/webapi01"
+      - "traefik.http.routers.webapi01.middlewares=webapi01-prefix,custom-source-header" #api-rate-limit
+  
+  webapi01-i1:
+    image: webapi01
+    ports:
+      - "5011:8080"
+      - "5013:8081"
+    build:
+      context: .
+      dockerfile: webapi01/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:80;http://+:8080;https://+:443;https://+:8081
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=123
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
+    volumes:
+      - ./Certificates:/https:ro  
+  
+  webapi01-i2:
+    image: webapi01
+    ports:
+      - "5021:8080"
+      - "5022:8081"
+    build:
+      context: .
+      dockerfile: webapi01/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:80;http://+:8080;https://+:443;https://+:8081
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=123
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
+    volumes:
+      - ./Certificates:/https:ro
+
+  webapi02:
+    image: webapi01
+    ports:
+      - "5003:8080"
+      - "5004:8081"
+    build:
+      context: .
+      dockerfile: webapi01/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:80;http://+:8080;https://+:443;https://+:8081
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=123
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
+    volumes:
+      - ./Certificates:/https:ro
+        
+        
+  webapi03:
+    image: webapi01
+    ports:
+      - "5005:8080"
+      - "5006:8081"
+    build:
+      context: .
+      dockerfile: webapi01/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:80;http://+:8080;https://+:443;https://+:8081
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=123
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
+    volumes:
+      - ./Certificates:/https:ro
+        
+        
+        
+  
+
+  

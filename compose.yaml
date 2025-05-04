@@ -18,10 +18,6 @@
    
   webapi01:
     image: webapi01
-    depends_on:
-      - prometheus
-      - jaeger
-      - loki
     ports:
       - "5001:8080"
       - "5003:8081"
@@ -43,15 +39,9 @@
       - "traefik.http.middlewares.custom-source-header.headers.customrequestheaders.X-Request-Source=Traefik"
       - "traefik.http.middlewares.webapi01-prefix.stripprefix.prefixes=/api/webapi01"
       - "traefik.http.routers.webapi01.middlewares=webapi01-prefix,custom-source-header" #api-rate-limit
-  #      - "traefik.http.middlewares.webapi01-rate-limit.ratelimit.average=5"
-  #      - "traefik.http.middlewares.webapi01-rate-limit.ratelimit.burst=2"
   
   webapi01-i1:
     image: webapi01
-    depends_on:
-      - prometheus
-      - jaeger
-      - loki
     ports:
       - "5001:8080"
       - "5003:8081"
@@ -68,10 +58,6 @@
   
   webapi01-i2:
     image: webapi01
-    depends_on:
-      - prometheus
-      - jaeger
-      - loki
     ports:
       - "5001:8080"
       - "5003:8081"
@@ -87,17 +73,13 @@
       - ./Certificates:/https:ro
 
   webapi02:
-    image: webapi02
-    depends_on:
-      - prometheus
-      - jaeger
-      - loki
+    image: webapi01
     ports:
-      - "5002:8080"
-      - "5004:8081"
+      - "5001:8080"
+      - "5003:8081"
     build:
       context: .
-      dockerfile: webapi02/Dockerfile
+      dockerfile: webapi01/Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:80;http://+:8080;https://+:443;https://+:8081
@@ -105,17 +87,24 @@
       - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
     volumes:
       - ./Certificates:/https:ro
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.webapi02.rule=PathPrefix(`/api/webapi02`)"
-      - "traefik.http.routers.webapi02.entrypoints=web"
-      - "traefik.http.services.webapi02.loadbalancer.server.port=8080"
-      - "traefik.http.middlewares.custom-source-header.headers.customrequestheaders.X-Request-Source=Traefik"
-      - "traefik.http.middlewares.webapi02-prefix.stripprefix.prefixes=/api/webapi02"
-      - "traefik.http.routers.webapi02.middlewares=webapi02-prefix,custom-source-header" #api-rate-limit
-#      - "traefik.http.middlewares.webapi02-rate-limit.ratelimit.average=5"
-#      - "traefik.http.middlewares.webapi02-rate-limit.ratelimit.burst=2"
-
+        
+  webapi03:
+    image: webapi01
+    ports:
+      - "5001:8080"
+      - "5003:8081"
+    build:
+      context: .
+      dockerfile: webapi01/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:80;http://+:8080;https://+:443;https://+:8081
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=123
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
+    volumes:
+      - ./Certificates:/https:ro
+        
+        
   yarpproxy:
     image: yarpproxy
     build:
@@ -127,6 +116,7 @@
     depends_on:
       - webapi01
       - webapi02
+      - webapi03
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:80;http://+:8080;https://+:443;https://+:8081
