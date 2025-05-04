@@ -4,6 +4,7 @@ using Common.Policies;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using Yarp.ReverseProxy;
+using YARPProxy.Configurations;
 using YARPProxy.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,7 +24,10 @@ builder.Services
     .AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.OperationFilter<SwaggerConfiguration>();
+});
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(CorsDefaultPolicy.Name, CorsDefaultPolicy.CorsPolicy);
@@ -54,13 +58,15 @@ app.UseSerilogRequestLogging();
 app.UseSwagger();
 app.UseSwaggerUI(options =>
 {
-    var stateLookup = app.Services.GetRequiredService<IProxyStateLookup>();
-    foreach (var route in stateLookup.GetRoutes().Where(r => !r.Config.RouteId.Contains("poke")))
+    var swaggerManagers = app.Services.GetRequiredService<ISwaggerEndpointManager>();
+    
+    foreach (var route in swaggerManagers.AvailableEndpointsVersions)
     {
-        string title = $"{route.Config.RouteId} - v1";
-        var (key, endpoint) = route.Cluster.Destinations.First();
-        options.SwaggerEndpoint(
-            $"{endpoint.Model.Config.Address}/swagger/v1/swagger.json", title);
+        foreach (var version in route.Versions)
+        {
+            options.SwaggerEndpoint(
+                $"{route.Address}/swagger/{version}/swagger.json", $"{route.Name} - {version}");
+        }
         options.EnableDeepLinking();
         options.DisplayOperationId();
         options.DisplayRequestDuration();
